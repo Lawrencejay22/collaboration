@@ -7,11 +7,13 @@ export default function Login({ onLoginSuccess, isLoggedIn, onNavigate }) {
     const [password, setPassword] = useState('');
     const [isConnecting, setIsConnecting] = useState(false);
 
-    const handleLogin = async (e) => {
+     const handleLogin = async (e) => {
         e.preventDefault();
         const trimmedUser = username.trim();
-        if (!trimmedUser) {
-            alert('Please enter your GitHub username');
+        const trimmedPassword = password.trim();
+
+        if (!trimmedUser || !trimmedPassword) {
+            alert('Please enter both your GitHub username and password.');
             return;
         }
         setIsConnecting(true);
@@ -29,71 +31,44 @@ export default function Login({ onLoginSuccess, isLoggedIn, onNavigate }) {
                     following: data.following
                 });
             } else {
-                // If API rate limited or user not found, fallback to dynamic mock for this specific username
-                onLoginSuccess({
-                    username: trimmedUser,
-                    name: trimmedUser,
-                    avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150`,
-                    bio: 'GitHub Developer | Open Source Enthusiast',
-                    repos: 18,
-                    followers: 25,
-                    following: 30
-                });
+                alert('GitHub account not found. Please check your username.');
             }
         } catch (error) {
-            // Safe network fallback for any user
-            onLoginSuccess({
-                username: trimmedUser,
-                name: trimmedUser,
-                avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150`,
-                bio: 'GitHub Developer | Open Source Enthusiast',
-                repos: 18,
-                followers: 25,
-                following: 30
-            });
+            alert('Error connecting to GitHub. Please try again.');
         } finally {
             setIsConnecting(false);
         }
     };
 
-    const mockGithubLogin = async () => {
-        const targetUser = username.trim() || 'Lawrencejay22';
+    const mockGithubLogin = async (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        const mainAccount = 'Lawrencejay22';
+
         setIsConnecting(true);
+
         try {
-            const response = await fetch(`https://api.github.com/users/${targetUser}`);
-            if (response.ok) {
-                const data = await response.json();
-                onLoginSuccess({
-                    username: data.login,
-                    name: data.name || data.login,
-                    avatar: data.avatar_url,
-                    bio: data.bio || 'GitHub Developer',
-                    repos: data.public_repos,
-                    followers: data.followers,
-                    following: data.following
-                });
-            } else {
-                // Dynamic fallback if API fails
-                onLoginSuccess({
-                    username: targetUser,
-                    name: targetUser === 'Lawrencejay22' ? 'Lawrence Jay' : targetUser,
-                    avatar: targetUser === 'Lawrencejay22' ? 'https://avatars.githubusercontent.com/u/100414902?v=4' : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-                    bio: targetUser === 'Lawrencejay22' ? 'Full Stack Developer | React Enthusiast' : 'GitHub Developer',
-                    repos: targetUser === 'Lawrencejay22' ? 24 : 15,
-                    followers: targetUser === 'Lawrencejay22' ? 120 : 35,
-                    following: targetUser === 'Lawrencejay22' ? 45 : 20
-                });
+            const response = await fetch(`https://api.github.com/users/${mainAccount}`);
+
+            if (!response.ok) {
+                alert('GitHub account not found. Please check the username.');
+                return;
             }
-        } catch (error) {
+
+            const data = await response.json();
+
             onLoginSuccess({
-                username: targetUser,
-                name: targetUser === 'Lawrencejay22' ? 'Lawrence Jay' : targetUser,
-                avatar: targetUser === 'Lawrencejay22' ? 'https://avatars.githubusercontent.com/u/100414902?v=4' : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-                bio: targetUser === 'Lawrencejay22' ? 'Full Stack Developer | React Enthusiast' : 'GitHub Developer',
-                repos: targetUser === 'Lawrencejay22' ? 24 : 15,
-                followers: targetUser === 'Lawrencejay22' ? 120 : 35,
-                following: targetUser === 'Lawrencejay22' ? 45 : 20
+                username: data.login,
+                name: data.name || data.login,
+                avatar: data.avatar_url,
+                bio: data.bio || 'GitHub Developer',
+                repos: data.public_repos,
+                followers: data.followers,
+                following: data.following
             });
+
+        } catch (error) {
+            console.error("GitHub Connection Error:", error);
+            alert('Error connecting to GitHub. Please try again.');
         } finally {
             setIsConnecting(false);
         }
